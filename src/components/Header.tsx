@@ -1,125 +1,54 @@
-import { Link, useLocation } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { mockCurrentUser } from "@/lib/mockData";
-import { BookOpen, Search, User, LogOut, Plus, Library } from "lucide-react";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { mockCurrentUser } from "@/lib/mockData";
 
 export function Header() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
   const navigate = useNavigate();
-  const location = useLocation();
-  const isAuthenticated = mockCurrentUser !== null;
+  const user = mockCurrentUser;
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      navigate(`/books?search=${encodeURIComponent(searchQuery.trim())}`);
+      navigate(`/books?search=${encodeURIComponent(searchQuery)}`);
     }
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-      <div className="container flex h-16 items-center justify-between gap-4">
-        {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 transition-opacity hover:opacity-80">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-            <BookOpen className="h-5 w-5 text-primary-foreground" />
-          </div>
-          <span className="font-serif text-xl font-bold text-foreground hidden sm:inline-block">
-            Bibliotheque
-          </span>
+    <header className="sticky top-0 z-50 bg-white border-b border-parchment shadow-sm">
+      <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between gap-4">
+        <Link to="/" className="flex items-center gap-2">
+          <div className="w-10 h-10 bg-burgundy rounded-lg flex items-center justify-center text-white text-xl">📚</div>
+          <span className="font-serif text-xl font-bold text-ink hidden sm:block">BookReview</span>
         </Link>
 
-        {/* Search bar */}
-        <form onSubmit={handleSearch} className="flex-1 max-w-md">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search books by title, author, or ISBN..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 pr-4 bg-secondary/50 border-border/60 focus:bg-background"
-            />
-          </div>
+        <form onSubmit={handleSearch} className="flex-1 max-w-md hidden md:block">
+          <input
+            type="text"
+            placeholder="Search books..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full px-4 py-2 border border-parchment rounded-lg bg-cream focus:outline-none focus:ring-2 focus:ring-burgundy/30"
+          />
         </form>
 
-        {/* Navigation */}
-        <nav className="flex items-center gap-2">
-          <Button
-            variant={location.pathname === "/books" ? "secondary" : "ghost"}
-            size="sm"
-            asChild
-          >
-            <Link to="/books" className="hidden sm:flex items-center gap-1">
-              <Library className="h-4 w-4" />
-              Browse
-            </Link>
-          </Button>
-
-          {isAuthenticated ? (
-            <>
-              <Button variant="default" size="sm" asChild>
-                <Link to="/books/add" className="flex items-center gap-1">
-                  <Plus className="h-4 w-4" />
-                  <span className="hidden sm:inline">Add Book</span>
-                </Link>
-              </Button>
-
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="rounded-full">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary">
-                      <User className="h-4 w-4 text-secondary-foreground" />
-                    </div>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <div className="px-2 py-1.5">
-                    <p className="text-sm font-medium">{mockCurrentUser?.name}</p>
-                    <p className="text-xs text-muted-foreground">{mockCurrentUser?.email}</p>
-                  </div>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link to="/profile" className="cursor-pointer">
-                      <User className="mr-2 h-4 w-4" />
-                      My Profile
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link to="/profile?tab=books" className="cursor-pointer">
-                      <BookOpen className="mr-2 h-4 w-4" />
-                      My Books
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link to="/login" className="cursor-pointer text-destructive">
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Sign Out
-                    </Link>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </>
+        <nav className="flex items-center gap-4">
+          <Link to="/books" className="text-ink hover:text-burgundy">Books</Link>
+          {user ? (
+            <div className="relative">
+              <button onClick={() => setMenuOpen(!menuOpen)} className="w-8 h-8 bg-forest text-white rounded-full flex items-center justify-center font-semibold">
+                {user.name.charAt(0)}
+              </button>
+              {menuOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white border border-parchment rounded-lg shadow-lg py-2">
+                  <Link to="/profile" className="block px-4 py-2 hover:bg-parchment" onClick={() => setMenuOpen(false)}>Profile</Link>
+                  <button className="block w-full text-left px-4 py-2 text-burgundy hover:bg-parchment">Sign Out</button>
+                </div>
+              )}
+            </div>
           ) : (
-            <>
-              <Button variant="ghost" size="sm" asChild>
-                <Link to="/login">Sign In</Link>
-              </Button>
-              <Button variant="default" size="sm" asChild>
-                <Link to="/register">Sign Up</Link>
-              </Button>
-            </>
+            <Link to="/login" className="px-4 py-2 bg-burgundy text-white rounded-lg hover:bg-burgundy/90">Sign In</Link>
           )}
         </nav>
       </div>
