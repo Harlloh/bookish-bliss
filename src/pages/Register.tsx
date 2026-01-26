@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import axios from "axios";
+import api from "@/lib/axios";
 
 export default function Register() {
   const [name, setName] = useState("");
@@ -9,9 +11,13 @@ export default function Register() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    await new Promise((r) => setTimeout(r, 1000));
-    alert(`Register: ${name} (${email})`);
+    // setLoading(true);
+    await api.post('http://localhost:8000/auth/register', {
+      email,
+      name,
+      password
+    })
+    // alert(`Register: ${name} (${email})`);
     setLoading(false);
   };
 

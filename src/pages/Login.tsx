@@ -1,18 +1,36 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import api from "@/lib/axios";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const navigate = useNavigate()
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 1000));
-    alert(`Login: ${email}`);
-    setLoading(false);
+    try {
+      const res = await api.post('http://localhost:8000/auth/login', {
+        email,
+        password
+      })
+      console.log(res);
+      if (res.data.success) {
+        navigate('/');
+      } else {
+        console.error("Login failed, no success flag.");
+        alert("Login failed, no success flag.");
+      }
+    } catch (error) {
+      console.error("Login error: ", error);
+    } finally {
+      setLoading(false);
+    }
   };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-cream p-4">

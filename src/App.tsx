@@ -15,7 +15,7 @@ const App = () => (
       <Route path="/books/:id" element={<BookDetail />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      <Route path="/verify/:token" element={<VerifyEmail />} />
+      <Route path="/verify" element={<VerifyEmail />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   </BrowserRouter>

@@ -1,22 +1,30 @@
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useState, useEffect } from "react";
+import api from "@/lib/axios";
+
 
 export default function VerifyEmail() {
-  const { token } = useParams<{ token?: string }>();
-  const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
+  const [status, setStatus] = useState<"loading" | "success" | "error" | null>(null);
+  const [searchParams] = useSearchParams();
 
-  useEffect(() => {
-    const verifyToken = async () => {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      setStatus(token && token.length > 5 ? "success" : "error");
-    };
 
-    if (token) {
-      verifyToken();
-    } else {
+  const verifyToken = searchParams.get("token");
+  const userId = searchParams.get("id");
+
+
+  const handleVerifyemail = async () => {
+    try {
+      setStatus("loading")
+      const res = await api.post('http://localhost:8000/auth/verify', {
+        token: verifyToken,
+        userId
+      })
+      setStatus('success')
+    } catch (error) {
       setStatus("error");
+      console.error("An error occured while verifying email address, ", error)
     }
-  }, [token]);
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-cream p-4">
@@ -35,6 +43,20 @@ export default function VerifyEmail() {
           <h1 className="font-serif text-2xl font-bold text-ink mb-4">
             Email Verification
           </h1>
+
+          {status === null && (
+            <div className="space-y-2">
+              <button onClick={() => handleVerifyemail()} className="w-full px-6 py-3 bg-burgundy text-white rounded-lg hover:bg-burgundy/90 transition-colors">
+                Click to Verify Email
+              </button>
+              <Link
+                to="/register"
+                className="block w-full px-6 py-3 text-muted hover:text-ink transition-colors"
+              >
+                Back to Sign Up
+              </Link>
+            </div>
+          )}
 
           {status === "loading" && (
             <div className="py-8">
