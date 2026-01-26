@@ -1,23 +1,27 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import axios from "axios";
-import api from "@/lib/axios";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuthStore } from "@/stores/authStore";
 
 export default function Register() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const navigate = useNavigate();
+  const { register } = useAuthStore();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // setLoading(true);
-    await api.post('http://localhost:8000/auth/register', {
-      email,
-      name,
-      password
-    })
-    // alert(`Register: ${name} (${email})`);
+    setLoading(true);
+    setError("");
+
+    const success = await register(name, email, password);
+    if (success) {
+      navigate("/verify");
+    } else {
+      setError("Registration failed. Please try again.");
+    }
     setLoading(false);
   };
 
@@ -32,6 +36,11 @@ export default function Register() {
         </div>
         <div className="bg-white border border-parchment rounded-lg p-8 shadow-lg">
           <h1 className="font-serif text-2xl font-bold text-ink text-center mb-6">Create Account</h1>
+          {error && (
+            <div className="mb-4 p-3 bg-burgundy/10 border border-burgundy/30 rounded-lg text-burgundy text-sm">
+              {error}
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-ink mb-1">Name</label>

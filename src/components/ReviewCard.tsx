@@ -1,7 +1,13 @@
+import { Link } from "react-router-dom";
 import { Review } from "@/lib/mockData";
 import { StarRating } from "./StarRating";
 
-export function ReviewCard({ review }: { review: Review }) {
+interface ReviewCardProps {
+  review: Review;
+  showBookTitle?: boolean;
+}
+
+export function ReviewCard({ review, showBookTitle = false }: ReviewCardProps) {
   return (
     <div className="bg-white border border-parchment rounded-lg p-4">
       <div className="flex items-start justify-between">
@@ -11,6 +17,11 @@ export function ReviewCard({ review }: { review: Review }) {
           </div>
           <div>
             <p className="font-semibold text-ink">{review.userName}</p>
+            {showBookTitle && review.bookTitle && (
+              <Link to={`/books/${review.bookId}`} className="text-sm text-burgundy hover:underline">
+                {review.bookTitle}
+              </Link>
+            )}
             <p className="text-xs text-muted">{new Date(review.createdAt).toLocaleDateString()}</p>
           </div>
         </div>

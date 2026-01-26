@@ -1,34 +1,31 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import api from "@/lib/axios";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useAuthStore } from "@/stores/authStore";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { login } = useAuthStore();
+
+  const from = location.state?.from?.pathname || "/";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    try {
-      const res = await api.post('http://localhost:8000/auth/login', {
-        email,
-        password
-      })
-      console.log(res);
-      if (res.data.success) {
-        navigate('/');
-      } else {
-        console.error("Login failed, no success flag.");
-        alert("Login failed, no success flag.");
-      }
-    } catch (error) {
-      console.error("Login error: ", error);
-    } finally {
-      setLoading(false);
+    setError("");
+
+    const success = await login(email, password);
+    if (success) {
+      navigate(from, { replace: true });
+    } else {
+      setError("Invalid email or password");
     }
+    setLoading(false);
   };
 
 
@@ -43,6 +40,11 @@ export default function Login() {
         </div>
         <div className="bg-white border border-parchment rounded-lg p-8 shadow-lg">
           <h1 className="font-serif text-2xl font-bold text-ink text-center mb-6">Sign In</h1>
+          {error && (
+            <div className="mb-4 p-3 bg-burgundy/10 border border-burgundy/30 rounded-lg text-burgundy text-sm">
+              {error}
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-ink mb-1">Email</label>
