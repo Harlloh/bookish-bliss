@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { useAuthStore } from "./stores/authStore";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import Home from "./pages/Home";
@@ -13,11 +13,12 @@ import VerifyEmail from "./pages/VerifyEmail";
 import NotFound from "./pages/NotFound";
 
 const App = () => {
-  const { fetchUser } = useAuthStore();
+  const { fetchUser, } = useAuthStore();
 
   useEffect(() => {
     fetchUser();
   }, [fetchUser]);
+
 
   return (
     <BrowserRouter>

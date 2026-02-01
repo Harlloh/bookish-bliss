@@ -30,8 +30,9 @@ export const useAuthStore = create<AuthState>((set) => ({
   login: async (email, password) => {
     try {
       const res = await api.post('/auth/login', { email, password });
+      console.log(res.data);
       if (res.data.success) {
-        set({ user: res.data.user, isAuthenticated: true });
+        set({ user: res.data.user, isAuthenticated: res.data.user.isVerified });
         return true;
       }
       return false;
@@ -44,7 +45,8 @@ export const useAuthStore = create<AuthState>((set) => ({
   register: async (name, email, password) => {
     try {
       const res = await api.post('/auth/register', { name, email, password });
-      return res.data.success;
+      if (res.data.success) return res.data;
+      return false;
     } catch (error) {
       console.error('Register error:', error);
       return false;

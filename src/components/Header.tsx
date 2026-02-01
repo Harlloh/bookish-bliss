@@ -38,14 +38,14 @@ export function Header() {
           {isAuthenticated && user ? (
             <div className="relative">
               <button onClick={() => setMenuOpen(!menuOpen)} className="w-8 h-8 bg-forest text-white rounded-full flex items-center justify-center font-semibold">
-                {user.name.charAt(0)}
+                {user?.name?.charAt(0)}
               </button>
               {menuOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white border border-parchment rounded-lg shadow-lg py-2">
                   <Link to="/profile" className="block px-4 py-2 hover:bg-parchment" onClick={() => setMenuOpen(false)}>Profile</Link>
                   <Link to="/books/add" className="block px-4 py-2 hover:bg-parchment" onClick={() => setMenuOpen(false)}>Add Book</Link>
-                  <button 
-                    onClick={() => { logout(); setMenuOpen(false); }} 
+                  <button
+                    onClick={() => { logout(); setMenuOpen(false); }}
                     className="block w-full text-left px-4 py-2 text-burgundy hover:bg-parchment"
                   >
                     Sign Out
