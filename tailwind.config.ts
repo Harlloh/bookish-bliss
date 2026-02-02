@@ -6,7 +6,7 @@ export default {
     extend: {
       colors: {
         cream: "hsl(45, 30%, 96%)",
-        parchment: "hsl(42, 35%, 92%)",
+        parchment: "hsl(42, 35%, 75%)",
         earth: "hsl(25, 35%, 35%)",
         burgundy: "hsl(355, 45%, 35%)",
         forest: "hsl(150, 30%, 30%)",

@@ -5,18 +5,18 @@ import api from '@/lib/axios';
 
 export default function AddBook() {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     author: '',
     overview: '',
     publishedYear: '',
   });
-  const [imageFile, setImageFile] = useState<File | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -26,6 +26,10 @@ export default function AddBook() {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setError('Image must be less than 5MB');
+        return;
+      }
       setImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -49,16 +53,19 @@ export default function AddBook() {
     setError('');
 
     try {
-      const payload = new FormData();
-      payload.append('title', formData.title);
-      payload.append('author', formData.author);
-      payload.append('overview', formData.overview);
-      payload.append('publishedYear', formData.publishedYear);
-      if (imageFile) {
-        payload.append('image', imageFile);
-      }
 
-      const res = await api.post('/books', payload, {
+      // Create FormData object
+      const data = new FormData();
+      data.append('title', formData.title);
+      data.append('author', formData.author);
+      data.append('overview', formData.overview);
+      data.append('publishedYear', formData.publishedYear);
+
+      // Add image if selected
+      if (imageFile) {
+        data.append('image', imageFile);
+      }
+      const res = await api.post('books/add-book', data, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -180,10 +187,10 @@ export default function AddBook() {
             </button>
             <button
               type="submit"
-              disabled={loading}
+              disabled={isLoading}
               className="flex-1 py-3 bg-burgundy text-white rounded-lg font-semibold hover:bg-burgundy/90 disabled:opacity-50"
             >
-              {loading ? 'Adding...' : 'Add Book'}
+              {isLoading ? 'Adding...' : 'Add Book'}
             </button>
           </div>
         </form>
