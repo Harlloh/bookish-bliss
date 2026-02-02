@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '@/components/Layout';
 import api from '@/lib/axios';
@@ -7,18 +7,40 @@ export default function AddBook() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
     title: '',
     author: '',
-    // isbn: '',
-    description: '',
-    publicationYear: '',
+    overview: '',
+    publishedYear: '',
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -27,9 +49,19 @@ export default function AddBook() {
     setError('');
 
     try {
-      const res = await api.post('/books', {
-        ...formData,
-        publicationYear: parseInt(formData.publicationYear, 10),
+      const payload = new FormData();
+      payload.append('title', formData.title);
+      payload.append('author', formData.author);
+      payload.append('overview', formData.overview);
+      payload.append('publishedYear', formData.publishedYear);
+      if (imageFile) {
+        payload.append('image', imageFile);
+      }
+
+      const res = await api.post('/books', payload, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
       });
 
       if (res.data.success) {
@@ -78,26 +110,12 @@ export default function AddBook() {
             />
           </div>
 
-          {/* <div>
-            <label className="block text-sm font-medium text-ink mb-1">ISBN *</label>
-            <input
-              type="text"
-              name="isbn"
-              value={formData.isbn}
-              onChange={handleChange}
-              required
-              maxLength={13}
-              className="w-full px-4 py-2 border border-parchment rounded-lg bg-cream focus:outline-none focus:ring-2 focus:ring-burgundy/30"
-            />
-            <p className="text-xs text-muted mt-1">13-digit ISBN number</p>
-          </div> */}
-
           <div>
-            <label className="block text-sm font-medium text-ink mb-1">Publication Year *</label>
+            <label className="block text-sm font-medium text-ink mb-1">Published Year *</label>
             <input
               type="number"
-              name="publicationYear"
-              value={formData.publicationYear}
+              name="publishedYear"
+              value={formData.publishedYear}
               onChange={handleChange}
               required
               min={1000}
@@ -107,13 +125,48 @@ export default function AddBook() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-ink mb-1">Description</label>
+            <label className="block text-sm font-medium text-ink mb-1">Overview</label>
             <textarea
-              name="description"
-              value={formData.description}
+              name="overview"
+              value={formData.overview}
               onChange={handleChange}
               rows={4}
               className="w-full px-4 py-2 border border-parchment rounded-lg bg-cream focus:outline-none focus:ring-2 focus:ring-burgundy/30 resize-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-ink mb-2">Book Cover Image</label>
+            {imagePreview ? (
+              <div className="relative inline-block">
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  className="w-32 h-44 object-cover rounded-lg border border-parchment"
+                />
+                <button
+                  type="button"
+                  onClick={removeImage}
+                  className="absolute -top-2 -right-2 w-6 h-6 bg-burgundy text-white rounded-full text-sm hover:bg-burgundy/80"
+                >
+                  ×
+                </button>
+              </div>
+            ) : (
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                className="w-32 h-44 border-2 border-dashed border-parchment rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-burgundy/50 transition-colors"
+              >
+                <span className="text-3xl text-muted mb-1">+</span>
+                <span className="text-xs text-muted">Add Image</span>
+              </div>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+              className="hidden"
             />
           </div>
 
