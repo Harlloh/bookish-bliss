@@ -11,7 +11,7 @@ export default function AddBook() {
   const [formData, setFormData] = useState({
     title: '',
     author: '',
-    isbn: '',
+    // isbn: '',
     description: '',
     publicationYear: '',
   });
@@ -78,7 +78,7 @@ export default function AddBook() {
             />
           </div>
 
-          <div>
+          {/* <div>
             <label className="block text-sm font-medium text-ink mb-1">ISBN *</label>
             <input
               type="text"
@@ -90,7 +90,7 @@ export default function AddBook() {
               className="w-full px-4 py-2 border border-parchment rounded-lg bg-cream focus:outline-none focus:ring-2 focus:ring-burgundy/30"
             />
             <p className="text-xs text-muted mt-1">13-digit ISBN number</p>
-          </div>
+          </div> */}
 
           <div>
             <label className="block text-sm font-medium text-ink mb-1">Publication Year *</label>
