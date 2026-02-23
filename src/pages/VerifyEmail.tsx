@@ -46,8 +46,8 @@ export default function VerifyEmail() {
 
           {status === null && (
             <div className="space-y-2">
-              <button onClick={() => handleVerifyemail()} className="w-full px-6 py-3 bg-burgundy text-white rounded-lg hover:bg-burgundy/90 transition-colors">
-                Click to Verify Email
+              <button disabled={!verifyToken} onClick={() => verifyToken ? handleVerifyemail() : null} className="w-full px-6 py-3 bg-burgundy text-white rounded-lg hover:bg-burgundy/90 transition-colors">
+                {verifyToken ? 'Click to Verify Email' : 'Check mail for link'}
               </button>
               <Link
                 to="/register"
