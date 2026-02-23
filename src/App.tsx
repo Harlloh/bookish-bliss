@@ -13,12 +13,17 @@ import VerifyEmail from "./pages/VerifyEmail";
 import NotFound from "./pages/NotFound";
 
 const App = () => {
-  const { fetchUser, } = useAuthStore();
+  const { fetchUser, hasHydrated, user } = useAuthStore();
 
   useEffect(() => {
-    fetchUser();
-  }, [fetchUser]);
+    if (hasHydrated && user) {
+      fetchUser();
+    }
+  }, []);
 
+  if (!hasHydrated) {
+    return null; // or loading screen
+  }
 
   return (
     <BrowserRouter>
