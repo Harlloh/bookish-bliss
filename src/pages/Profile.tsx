@@ -1,9 +1,16 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Layout } from '@/components/Layout';
 import { useAuthStore } from '@/stores/authStore';
 import { ReviewCard } from '@/components/ReviewCard';
 import { BookCard } from '@/components/BookCard';
 import { getReviewsByUserId, getBooksByUserId } from '@/lib/mockData';
+import api from './../lib/axios';
+import { useQuery } from '@tanstack/react-query';
+
+const fetchUserProfile = async () => {
+  const response = await api.get('/profile');
+  return response.data.data;
+};
 
 export default function Profile() {
   const { user, logout } = useAuthStore();
@@ -17,6 +24,13 @@ export default function Profile() {
   const handleLogout = async () => {
     await logout();
   };
+
+  const { data: userProfile, isLoading: isUserLoading } = useQuery({
+    queryKey: ['userProfile'],
+    queryFn: fetchUserProfile,
+  });
+
+  console.log(userProfile);
 
   return (
     <Layout>
@@ -53,50 +67,54 @@ export default function Profile() {
         <div className="flex gap-4 mb-6 border-b border-parchment">
           <button
             onClick={() => setActiveTab('reviews')}
-            className={`pb-3 px-2 font-medium transition-colors ${
-              activeTab === 'reviews'
-                ? 'text-burgundy border-b-2 border-burgundy'
-                : 'text-muted hover:text-ink'
-            }`}
+            className={`pb-3 px-2 font-medium transition-colors ${activeTab === 'reviews'
+              ? 'text-burgundy border-b-2 border-burgundy'
+              : 'text-muted hover:text-ink'
+              }`}
           >
-            My Reviews ({userReviews.length})
+            My Reviews ({userProfile?.reviews.length})
           </button>
           <button
             onClick={() => setActiveTab('books')}
-            className={`pb-3 px-2 font-medium transition-colors ${
-              activeTab === 'books'
-                ? 'text-burgundy border-b-2 border-burgundy'
-                : 'text-muted hover:text-ink'
-            }`}
+            className={`pb-3 px-2 font-medium transition-colors ${activeTab === 'books'
+              ? 'text-burgundy border-b-2 border-burgundy'
+              : 'text-muted hover:text-ink'
+              }`}
           >
-            Books Added ({userBooks.length})
+            Books Added ({userProfile?.books?.length})
           </button>
         </div>
 
         {/* Content */}
-        {activeTab === 'reviews' ? (
-          userReviews.length > 0 ? (
-            <div className="space-y-4">
-              {userReviews.map((review) => (
-                <ReviewCard key={review.id} review={review} showBookTitle />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-12 text-muted">
-              <p>You haven't written any reviews yet.</p>
-            </div>
+        {isUserLoading ?
+          <div>Loading...</div>
+          :
+          (
+            activeTab === 'reviews' ? (
+              userProfile?.reviews?.length > 0 ? (
+                <div className="space-y-4">
+                  {userProfile?.reviews?.slice().reverse().map((review) => (
+                    <ReviewCard key={review.id} review={review} showBookTitle />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12 text-muted">
+                  <p>You haven't written any reviews yet.</p>
+                </div>
+              )
+            ) : userProfile?.books?.length > 0 ? (
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {userProfile?.books?.slice().reverse().map((book) => (
+                  <BookCard key={book.id} book={book} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12 text-muted">
+                <p>You haven't added any books yet.</p>
+              </div>
+            )
           )
-        ) : userBooks.length > 0 ? (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {userBooks.map((book) => (
-              <BookCard key={book.id} book={book} />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-12 text-muted">
-            <p>You haven't added any books yet.</p>
-          </div>
-        )}
+        }
       </div>
     </Layout>
   );

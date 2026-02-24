@@ -20,7 +20,7 @@ export interface Book {
   createdAt: string;
   averageRating: number;
   reviewCount: number;
-  coverUrl?: string;
+  imageUrl?: string;
 }
 
 export interface Review {

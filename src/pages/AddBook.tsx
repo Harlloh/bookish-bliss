@@ -2,10 +2,10 @@ import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Layout } from '@/components/Layout';
 import api from '@/lib/axios';
+import { useMutation } from '@tanstack/react-query';
 
 export default function AddBook() {
   const navigate = useNavigate();
-  const [isLoading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -47,38 +47,42 @@ export default function AddBook() {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
+  // ✅ mutationFn receives data, not a form event
+  const addBook = async ({ formData: form, imageFile }: { formData: { title: string; author: string; overview: string; publishedYear: string }, imageFile: File | null }) => {
+    const data = new FormData();
+    data.append('title', form.title);
+    data.append('author', form.author);
+    data.append('overview', form.overview);
+    data.append('publishedYear', form.publishedYear);
 
-    try {
-      // Create FormData object
-      const data = new FormData();
-      data.append('title', formData.title);
-      data.append('author', formData.author);
-      data.append('overview', formData.overview);
-      data.append('publishedYear', formData.publishedYear);
-
-      // Add image if selected
-      if (imageFile) {
-        data.append('image', imageFile);
-      }
-      const res = await api.post('books/add-book', data, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      });
-      console.log(res);
-      if (res.data.success) {
-        navigate(`/books/${res.data.book.id}`);
-      }
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to add book');
-      console.log('Error uploading book', err);
-    } finally {
-      setLoading(false);
+    if (imageFile) {
+      data.append('image', imageFile);
     }
+
+    const res = await api.post('/books/add-book', data, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return res.data;
+  };
+
+  // ✅ use isPending instead of manual isLoading state
+  const { mutate, isPending } = useMutation({
+    mutationFn: addBook,
+    onSuccess: (data) => {
+      if (data.success) {
+        navigate(`/books/${data.book.id}`);
+      }
+    },
+    onError: (error: any) => {
+      setError(error.response?.data?.message || 'Failed to add book');
+    },
+  });
+
+  // ✅ handleSubmit passes data to mutate, not the event
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    mutate({ formData, imageFile });
   };
 
   return (
@@ -187,10 +191,10 @@ export default function AddBook() {
             </button>
             <button
               type="submit"
-              disabled={isLoading}
+              disabled={isPending}
               className="flex-1 py-3 bg-burgundy text-white rounded-lg font-semibold hover:bg-burgundy/90 disabled:opacity-50"
             >
-              {isLoading ? 'Adding...' : 'Add Book'}
+              {isPending ? 'Adding...' : 'Add Book'}
             </button>
           </div>
         </form>

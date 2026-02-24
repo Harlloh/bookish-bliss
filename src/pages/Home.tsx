@@ -4,17 +4,28 @@ import { BookCard } from "@/components/BookCard";
 import { mockBooks } from "@/lib/mockData";
 import { useEffect } from "react";
 import api from "@/lib/axios";
+import { useQuery } from "@tanstack/react-query";
+
+
 export default function Home() {
   const featuredBooks = mockBooks.slice(0, 3);
   const topRatedBooks = [...mockBooks].sort((a, b) => b.averageRating - a.averageRating).slice(0, 3);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const res = await api.get('books');
-      console.log(res);
-    };
-    fetchData();
-  }, [])
+  // useEffect(() => {
+  //   const ) = async () => {
+  //     const res = await api.get('books');
+  //     console.log(res);
+  //   };
+  //   fetchData();
+  // }, [])
+  const fetchDashboard = async () => {
+    const res = await api.get('/books/dashboard')
+    return res
+  }
+  const { data: dashBoard, isLoading: isDashboardLoading } = useQuery({
+    queryKey: ['dashboard'],
+    queryFn: fetchDashboard
+  })
 
   return (
     <Layout>
