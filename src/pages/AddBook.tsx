@@ -53,7 +53,6 @@ export default function AddBook() {
     setError('');
 
     try {
-
       // Create FormData object
       const data = new FormData();
       data.append('title', formData.title);
@@ -70,12 +69,13 @@ export default function AddBook() {
           'Content-Type': 'multipart/form-data',
         },
       });
-
+      console.log(res);
       if (res.data.success) {
         navigate(`/books/${res.data.book.id}`);
       }
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to add book');
+      console.log('Error uploading book', err);
     } finally {
       setLoading(false);
     }
