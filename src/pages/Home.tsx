@@ -5,11 +5,16 @@ import { mockBooks } from "@/lib/mockData";
 import { useEffect } from "react";
 import api from "@/lib/axios";
 import { useQuery } from "@tanstack/react-query";
+import { Loader } from "lucide-react";
+import { useAuthStore } from "@/stores/authStore";
+import { EmptyBookShelf } from './../components/EmptyBookShelf';
 
 
 export default function Home() {
-  const featuredBooks = mockBooks.slice(0, 3);
-  const topRatedBooks = [...mockBooks].sort((a, b) => b.averageRating - a.averageRating).slice(0, 3);
+  const { user, isAuthenticated, } = useAuthStore();
+
+  // const featuredBooks = mockBooks.slice(0, 3);
+  // const topRatedBooks = [...mockBooks].sort((a, b) => b.averageRating - a.averageRating).slice(0, 3);
 
   // useEffect(() => {
   //   const ) = async () => {
@@ -19,13 +24,19 @@ export default function Home() {
   //   fetchData();
   // }, [])
   const fetchDashboard = async () => {
-    const res = await api.get('/books/dashboard')
-    return res
+    const res = await api.get('/dashboard')
+    return res.data
   }
-  const { data: dashBoard, isLoading: isDashboardLoading } = useQuery({
+  const { data: dashBoardData, isLoading: isDashboardLoading, isError } = useQuery({
     queryKey: ['dashboard'],
     queryFn: fetchDashboard
   })
+
+  if (isDashboardLoading) {
+    return <h1>Loading</h1>
+  }
+  if (isDashboardLoading) return <h1>Loading...</h1>
+  // if (isError) return <h1>Something went wrong</h1>
 
   return (
     <Layout>
@@ -59,19 +70,19 @@ export default function Home() {
       {/* Stats */}
       <section className="border-y border-parchment bg-warm-white py-12">
         <div className="max-w-6xl mx-auto px-4">
-          <div className="grid grid-cols-3 gap-8 text-center">
+          <div className={`grid gap-8 text-center ${(user && isAuthenticated) ? 'grid-cols-3' : 'grid-cols-2'}`}>
             <div>
-              <p className="text-3xl font-bold font-serif text-burgundy">{mockBooks.length}</p>
+              <p className="text-3xl font-bold font-serif text-burgundy">{dashBoardData?.totalBooks || 0}</p>
               <p className="text-sm text-muted">Books</p>
             </div>
             <div>
-              <p className="text-3xl font-bold font-serif text-gold">24</p>
+              <p className="text-3xl font-bold font-serif text-gold">{dashBoardData?.totalReviews || 0}</p>
               <p className="text-sm text-muted">Reviews</p>
             </div>
-            <div>
-              <p className="text-3xl font-bold font-serif text-forest">3</p>
+            {(user && isAuthenticated) && <div>
+              <p className="text-3xl font-bold font-serif text-forest">{dashBoardData?.totalMembers || 0}</p>
               <p className="text-sm text-muted">Members</p>
-            </div>
+            </div>}
           </div>
         </div>
       </section>
@@ -86,9 +97,11 @@ export default function Home() {
             </Link>
           </div>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {featuredBooks.map((book) => (
+            {dashBoardData?.recentBooks?.length > 0 ? dashBoardData?.recentBooks?.map((book) => (
               <BookCard key={book.id} book={book} />
-            ))}
+            )) :
+              <EmptyBookShelf type="recently-added" />
+            }
           </div>
         </div>
       </section>
@@ -103,9 +116,11 @@ export default function Home() {
             </Link>
           </div>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {topRatedBooks.map((book) => (
+            {dashBoardData?.topRated?.length > 0 ? dashBoardData?.topRatedBooks?.map((book) => (
               <BookCard key={book.id} book={book} />
-            ))}
+            )) :
+              <EmptyBookShelf type="top-rated" />
+            }
           </div>
         </div>
       </section>
