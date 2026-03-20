@@ -3,16 +3,63 @@ import { useParams, Link } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { StarRating } from "@/components/StarRating";
 import { ReviewCard } from "@/components/ReviewCard";
-import { getBookById, getReviewsByBookId, mockCurrentUser } from "@/lib/mockData";
+import { getBookById, getReviewsByBookId, } from "@/lib/mockData";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import api from './../lib/axios';
+import { useAuthStore } from "@/stores/authStore";
+import { BookDetailSkeleton } from "@/components/bookSkeleton";
 
 export default function BookDetail() {
   const { id } = useParams<{ id: string }>();
-  const book = getBookById(Number(id));
-  const reviews = getReviewsByBookId(Number(id));
-  
+  const { user } = useAuthStore()
+  const queryClient = useQueryClient();
+
+
+
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewText, setReviewText] = useState("");
+
+
+  const fetchBookById = async () => {
+    const res = await api.get(`/books/${id}`)
+    return res.data.book
+  }
+
+  const { data: book, isLoading } = useQuery({
+    queryKey: ['books', id],  // include id so each book gets its own cache
+    queryFn: fetchBookById,
+    // staleTime: 1000 * 60 * 5
+  })
+
+
+
+  const handleSubmitReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const reviewData = { star: reviewRating, comment: reviewText };
+    const res = await api.post(`/reviews/add-review/${id}`, reviewData);
+    return res.data;
+  };
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: handleSubmitReview,
+    onSuccess: () => {
+      // invalidate the book query so it refetches with the new review
+      queryClient.invalidateQueries({ queryKey: ['books', id] });
+      setShowReviewForm(false);
+      setReviewRating(0);
+      setReviewText("");
+    },
+    onError: (error) => {
+      console.error('Failed to submit review:', error);
+    }
+  })
+
+  if (isLoading) {
+    return <Layout>
+      <BookDetailSkeleton />
+    </Layout>
+  }
 
   if (!book) {
     return (
@@ -27,14 +74,6 @@ export default function BookDetail() {
     );
   }
 
-  const handleSubmitReview = (e: React.FormEvent) => {
-    e.preventDefault();
-    alert(`Review submitted! Rating: ${reviewRating}, Text: ${reviewText}`);
-    setShowReviewForm(false);
-    setReviewRating(0);
-    setReviewText("");
-  };
-
   return (
     <Layout>
       <div className="max-w-6xl mx-auto px-4 py-8">
@@ -45,32 +84,41 @@ export default function BookDetail() {
         <div className="grid md:grid-cols-3 gap-8">
           {/* Book Cover */}
           <div className="md:col-span-1">
-            <div className="aspect-[3/4] bg-gradient-to-br from-burgundy/20 to-forest/20 rounded-lg flex items-center justify-center">
-              <span className="text-8xl">📖</span>
-            </div>
+            {book?.imageUrl ? (
+              <div className="relative w-full aspect-[2/3] overflow-hidden rounded-lg shadow-md">
+                <img
+                  className="absolute inset-0 w-full h-full object-cover"
+                  src={book.imageUrl}
+                  alt={book.title ?? "Book cover"}
+                />
+              </div>)
+              :
+              <div className="aspect-[3/4] bg-gradient-to-br from-burgundy/20 to-forest/20 rounded-lg flex items-center justify-center">
+                <span className="text-8xl">📖</span>
+              </div>}
           </div>
+
 
           {/* Book Info */}
           <div className="md:col-span-2">
             <h1 className="font-serif text-3xl font-bold text-ink">{book.title}</h1>
             <p className="text-lg text-muted mt-2">by {book.author}</p>
-            
+
             <div className="flex items-center gap-4 mt-4">
-              <StarRating rating={Math.round(book.averageRating)} size="lg" />
+              <StarRating rating={Math.round(book?.avgRating)} size="lg" />
               <span className="text-muted">
-                {book.averageRating.toFixed(1)} ({book.reviewCount} reviews)
+                {book?.avgRating?.toFixed(1)} ({book?.reviewCount} reviews)
               </span>
             </div>
 
             <div className="mt-6 space-y-2 text-sm">
-              <p><span className="font-semibold">ISBN:</span> {book.isbn}</p>
-              <p><span className="font-semibold">Published:</span> {book.publicationYear}</p>
-              <p><span className="font-semibold">Added by:</span> {book.addedByName}</p>
+              <p><span className="font-semibold">Published:</span> {book?.publishedYear}</p>
+              <p><span className="font-semibold">Added by:</span> {book?.addedBy.name}</p>
             </div>
 
-            <p className="mt-6 text-ink leading-relaxed">{book.description}</p>
+            <p className="mt-6 text-ink leading-relaxed">{book?.overview}</p>
 
-            {mockCurrentUser && (
+            {user && (
               <button
                 onClick={() => setShowReviewForm(!showReviewForm)}
                 className="mt-6 px-6 py-3 bg-burgundy text-white rounded-lg hover:bg-burgundy/90 transition-colors"
@@ -85,7 +133,7 @@ export default function BookDetail() {
         {showReviewForm && (
           <form onSubmit={handleSubmitReview} className="mt-8 bg-warm-white border border-parchment rounded-lg p-6">
             <h3 className="font-serif text-xl font-bold text-ink mb-4">Write Your Review</h3>
-            
+
             <div className="mb-4">
               <label className="block text-sm font-medium text-ink mb-2">Your Rating</label>
               <StarRating
@@ -95,7 +143,7 @@ export default function BookDetail() {
                 onChange={setReviewRating}
               />
             </div>
-            
+
             <div className="mb-4">
               <label className="block text-sm font-medium text-ink mb-2">Your Review</label>
               <textarea
@@ -108,14 +156,14 @@ export default function BookDetail() {
                 className="w-full px-4 py-2 border border-parchment rounded-lg bg-cream focus:outline-none focus:ring-2 focus:ring-burgundy/30 resize-none"
               />
             </div>
-            
+
             <div className="flex gap-4">
               <button
                 type="submit"
-                disabled={reviewRating === 0}
+                disabled={reviewRating === 0 || isPending}
                 className="px-6 py-2 bg-burgundy text-white rounded-lg hover:bg-burgundy/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Submit Review
+                {isPending ? 'Submitting...' : 'Submit Review'}
               </button>
               <button
                 type="button"
@@ -131,12 +179,12 @@ export default function BookDetail() {
         {/* Reviews */}
         <section className="mt-12">
           <h2 className="font-serif text-2xl font-bold text-ink mb-6">
-            Reviews ({reviews.length})
+            Reviews ({book?.reviews?.length})
           </h2>
-          
-          {reviews.length > 0 ? (
+
+          {book?.reviews?.length > 0 ? (
             <div className="space-y-4">
-              {reviews.map((review) => (
+              {book?.reviews?.map((review: any) => (
                 <ReviewCard key={review.id} review={review} />
               ))}
             </div>

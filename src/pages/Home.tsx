@@ -4,13 +4,13 @@ import { BookCard } from "@/components/BookCard";
 import api from "@/lib/axios";
 import { useQuery } from "@tanstack/react-query";
 import { EmptyBookShelf } from './../components/EmptyBookShelf';
-import { BookshelfLoading } from '../components/loadingScreen';
 import DashStats from "@/components/dahsboardStats";
 import SkeletonCard from "@/components/skeletonCard";
+import { useAuthStore } from "@/stores/authStore";
 
 
 export default function Home() {
-
+  const { user } = useAuthStore()
   const fetchDashboard = async () => {
     const res = await api.get('/dashboard')
     return res.data
@@ -65,13 +65,13 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-4">
           <div className="flex items-center justify-between mb-8">
             <h2 className="font-serif text-2xl font-bold text-ink">Recently Added</h2>
-            <Link
+            {user && <Link
               to="/books?sort=rating"
               className="text-burgundy hover:underline disabled:pointer-events-none disabled:opacity-50"
               onClick={(e) => isDashboardLoading && e.preventDefault()}
             >
               View All →
-            </Link>
+            </Link>}
           </div>
           {isDashboardLoading ?
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -93,13 +93,13 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-4">
           <div className="flex items-center justify-between mb-8">
             <h2 className="font-serif text-2xl font-bold text-ink">Top Rated</h2>
-            <Link
+            {user && <Link
               to="/books?sort=rating"
               className="text-burgundy hover:underline disabled:pointer-events-none disabled:opacity-50"
               onClick={(e) => isDashboardLoading && e.preventDefault()}
             >
               View All →
-            </Link>
+            </Link>}
           </div>
           {isDashboardLoading ?
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

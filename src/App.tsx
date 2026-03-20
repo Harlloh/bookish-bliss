@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { BrowserRouter, Routes, Route, useNavigate } from "react-router-dom";
 import { useAuthStore } from "./stores/authStore";
-import { ProtectedRoute } from "./components/ProtectedRoute";
 import Home from "./pages/Home";
 import Books from "./pages/Books";
 import BookDetail from "./pages/BookDetail";
@@ -11,6 +10,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import VerifyEmail from "./pages/VerifyEmail";
 import NotFound from "./pages/NotFound";
+import ProtectedRouteM from "./components/protectedROutes";
 
 const App = () => {
   const { fetchUser, hasHydrated, user } = useAuthStore();
@@ -29,22 +29,28 @@ const App = () => {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/books" element={<Books />} />
-        <Route path="/books/:id" element={<BookDetail />} />
+        <Route path="/books" element={
+          <ProtectedRouteM>
+            <Books />
+          </ProtectedRouteM>
+        } />
+        <Route path="/books/:id" element={<ProtectedRouteM>
+          <BookDetail />
+        </ProtectedRouteM>} />
         <Route
           path="/books/add"
           element={
-            <ProtectedRoute>
+            <ProtectedRouteM>
               <AddBook />
-            </ProtectedRoute>
+            </ProtectedRouteM>
           }
         />
         <Route
           path="/profile"
           element={
-            <ProtectedRoute>
+            <ProtectedRouteM>
               <Profile />
-            </ProtectedRoute>
+            </ProtectedRouteM>
           }
         />
         <Route path="/login" element={<Login />} />

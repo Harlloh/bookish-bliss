@@ -1,22 +1,85 @@
-import { useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
 import { Layout } from "@/components/Layout";
 import { BookCard } from "@/components/BookCard";
-import { mockBooks, searchBooks } from "@/lib/mockData";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import api from './../lib/axios';
+import SkeletonCard from "@/components/skeletonCard";
+
+interface SearchType {
+  pageSize: number;
+  query: 'recent' | 'rating' | 'title';
+  searchText: string;
+}
 
 export default function Books() {
-  const [searchParams] = useSearchParams();
-  const initialSearch = searchParams.get("search") || "";
-  const [query, setQuery] = useState(initialSearch);
-  const [sortBy, setSortBy] = useState("recent");
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const [searchInput, setSearchInput] = useState<string>('')
 
-  const filteredBooks = query ? searchBooks(query) : mockBooks;
-  const sortedBooks = [...filteredBooks].sort((a, b) => {
-    if (sortBy === "rating") return b.averageRating - a.averageRating;
-    if (sortBy === "title") return a.title.localeCompare(b.title);
-    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  const [filterData, setFilterData] = useState<SearchType>({
+    pageSize: 20,
+    query: 'recent',
+    searchText: ''
   });
 
+  const fetchBooks = async ({ pageParam = 1 }: { pageParam: number }) => {
+    const res = await api.get('/books', {
+      params: {
+        page: pageParam,
+        pageSize: filterData.pageSize,
+        sort: filterData.query,
+        search: filterData.searchText,
+      }
+    }); // swap /dashboard → /books when ready
+    return res.data;
+  };
+
+  const {
+    data,
+    isLoading,
+    isFetchingNextPage,
+    fetchNextPage,
+    hasNextPage,
+  } = useInfiniteQuery({
+    queryKey: ['books', filterData.query, filterData.searchText],
+    queryFn: fetchBooks,
+    getNextPageParam: (lastPage) =>
+      lastPage?.pagination?.hasNextPage
+        ? lastPage.pagination.page + 1
+        : undefined,
+    initialPageParam: 1,
+    staleTime: 1000 * 60 * 10,
+  });
+  const allBooks = data?.pages.flatMap(page => page.data) ?? [];
+
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const first = entries[0];
+        if (first.isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage()
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (bottomRef.current) observer.observe(bottomRef.current);
+
+    return () => observer.disconnect()
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage])
+
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setFilterData(prev => ({ ...prev, searchText: searchInput }));
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  const setQuery = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFilterData(prev => ({ ...prev, [name]: value }));
+  };
   return (
     <Layout>
       <div className="max-w-6xl mx-auto px-4 py-8">
@@ -26,14 +89,16 @@ export default function Books() {
         <div className="flex flex-col sm:flex-row gap-4 mb-8">
           <input
             type="text"
+            name="searchText"
             placeholder="Search by title, author, or ISBN..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
             className="flex-1 px-4 py-2 border border-parchment rounded-lg bg-cream focus:outline-none focus:ring-2 focus:ring-burgundy/30"
           />
           <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
+            name="query"                // ← required for setQuery to work
+            value={filterData.query}
+            onChange={setQuery}
             className="px-4 py-2 border border-parchment rounded-lg bg-cream focus:outline-none focus:ring-2 focus:ring-burgundy/30"
           >
             <option value="recent">Most Recent</option>
@@ -43,17 +108,41 @@ export default function Books() {
         </div>
 
         {/* Books Grid */}
-        {sortedBooks.length > 0 ? (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {sortedBooks.map((book) => (
-              <BookCard key={book.id} book={book} />
-            ))}
+        {isLoading ? (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {[...Array(4)].map((_, i) => <SkeletonCard key={i} />)}
           </div>
+        ) : allBooks.length > 0 ? (
+          <>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {allBooks.map((book) => (
+                <BookCard key={book.id} book={book} />
+              ))}
+            </div>
+
+            {/* Invisible scroll trigger */}
+            <div ref={bottomRef} className="h-1" />
+
+            {/* Loading indicator for next page */}
+            {isFetchingNextPage && (
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mt-6">
+                {[...Array(4)].map((_, i) => <SkeletonCard key={i} />)}
+              </div>
+            )}
+
+            {/* End of results */}
+            {!hasNextPage && (
+              <p className="text-center text-muted text-sm mt-10">
+                You've reached the end of the list
+              </p>
+            )}
+          </>
         ) : (
           <div className="text-center py-16">
-            <p className="text-muted">No books found matching "{query}"</p>
+            <p className="text-muted">No books found matching "{filterData.searchText}"</p>
           </div>
         )}
+
       </div>
     </Layout>
   );

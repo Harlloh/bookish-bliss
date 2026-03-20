@@ -34,11 +34,11 @@ export function Header() {
         </form>
 
         <nav className="flex items-center gap-4">
-          <Link to="/books" className="text-ink hover:text-burgundy">Books</Link>
+          {isAuthenticated && user && <Link to="/books" className="text-ink hover:text-burgundy">Books</Link>}
           {isAuthenticated && user ? (
             <div className="relative">
               <button onClick={() => setMenuOpen(!menuOpen)} className="w-8 h-8 bg-forest text-white rounded-full flex items-center justify-center font-semibold">
-                {user?.name?.charAt(0)}
+                {user?.user?.charAt(0).toUpperCase()}
               </button>
               {menuOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white border border-parchment rounded-lg shadow-lg py-2">

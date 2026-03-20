@@ -41,10 +41,10 @@ export default function Profile() {
         <div className="bg-white border border-parchment rounded-lg p-6 mb-8">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 bg-forest text-white rounded-full flex items-center justify-center text-2xl font-bold">
-              {user?.name?.charAt(0) || 'U'}
+              {user?.user?.charAt(0) || 'U'}
             </div>
             <div className="flex-1">
-              <h1 className="font-serif text-2xl font-bold text-ink">{user?.name || 'User'}</h1>
+              <h1 className="font-serif text-2xl font-bold text-ink">{user?.user || 'User'}</h1>
               <p className="text-muted">{user?.email}</p>
               <p className="text-sm text-muted mt-1">
                 Member since {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}

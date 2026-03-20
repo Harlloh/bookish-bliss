@@ -2,18 +2,15 @@ import { Link } from "react-router-dom";
 import { Review } from "@/lib/mockData";
 import { StarRating } from "./StarRating";
 
-interface ReviewCardProps {
-  review: Review;
-  showBookTitle?: boolean;
-}
 
-export function ReviewCard({ review, showBookTitle = false }: ReviewCardProps) {
+
+export function ReviewCard({ review, showBookTitle = false }: any) {
   return (
     <div className="bg-white border border-parchment rounded-lg p-4">
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-forest text-white rounded-full flex items-center justify-center font-semibold">
-            {review.userName.charAt(0)}
+            {review?.createdBy?.charAt(0)}
           </div>
           <div>
             <p className="font-semibold text-ink">{review.userName}</p>
