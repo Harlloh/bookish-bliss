@@ -6,6 +6,7 @@ import { BookCard } from '@/components/BookCard';
 import { getReviewsByUserId, getBooksByUserId } from '@/lib/mockData';
 import api from './../lib/axios';
 import { useQuery } from '@tanstack/react-query';
+import { ProfileLoading } from '@/components/profileLoading';
 
 const fetchUserProfile = async () => {
   const response = await api.get('/profile');
@@ -28,6 +29,7 @@ export default function Profile() {
   const { data: userProfile, isLoading: isUserLoading } = useQuery({
     queryKey: ['userProfile'],
     queryFn: fetchUserProfile,
+    staleTime: 60 * 60 * 5
   });
 
   console.log(userProfile);
@@ -87,7 +89,7 @@ export default function Profile() {
 
         {/* Content */}
         {isUserLoading ?
-          <div>Loading...</div>
+          <Layout><ProfileLoading /></Layout>
           :
           (
             activeTab === 'reviews' ? (

@@ -1,45 +1,35 @@
 import { Link } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { BookCard } from "@/components/BookCard";
-import { mockBooks } from "@/lib/mockData";
-import { useEffect } from "react";
 import api from "@/lib/axios";
 import { useQuery } from "@tanstack/react-query";
-import { Loader } from "lucide-react";
-import { useAuthStore } from "@/stores/authStore";
 import { EmptyBookShelf } from './../components/EmptyBookShelf';
+import { BookshelfLoading } from '../components/loadingScreen';
+import DashStats from "@/components/dahsboardStats";
+import SkeletonCard from "@/components/skeletonCard";
 
 
 export default function Home() {
-  const { user, isAuthenticated, } = useAuthStore();
 
-  // const featuredBooks = mockBooks.slice(0, 3);
-  // const topRatedBooks = [...mockBooks].sort((a, b) => b.averageRating - a.averageRating).slice(0, 3);
-
-  // useEffect(() => {
-  //   const ) = async () => {
-  //     const res = await api.get('books');
-  //     console.log(res);
-  //   };
-  //   fetchData();
-  // }, [])
   const fetchDashboard = async () => {
     const res = await api.get('/dashboard')
     return res.data
   }
-  const { data: dashBoardData, isLoading: isDashboardLoading, isError } = useQuery({
+  const { data: dashBoardData, isLoading: isDashboardLoading, isFetching } = useQuery({
     queryKey: ['dashboard'],
-    queryFn: fetchDashboard
+    queryFn: fetchDashboard,
+    staleTime: 1000 * 60 * 10,
   })
 
-  if (isDashboardLoading) {
-    return <h1>Loading</h1>
-  }
-  if (isDashboardLoading) return <h1>Loading...</h1>
-  // if (isError) return <h1>Something went wrong</h1>
+
 
   return (
     <Layout>
+      {isFetching && !isDashboardLoading && (
+        <div className="fixed bottom-4 right-4 text-xs text-muted bg-warm-white border border-parchment px-3 py-1.5 rounded-full shadow-sm">
+          Updating...
+        </div>
+      )}
       {/* Hero */}
       <section className="bg-gradient-to-b from-parchment to-cream py-20">
         <div className="max-w-6xl mx-auto px-4 text-center">
@@ -68,41 +58,33 @@ export default function Home() {
       </section>
 
       {/* Stats */}
-      <section className="border-y border-parchment bg-warm-white py-12">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className={`grid gap-8 text-center ${(user && isAuthenticated) ? 'grid-cols-3' : 'grid-cols-2'}`}>
-            <div>
-              <p className="text-3xl font-bold font-serif text-burgundy">{dashBoardData?.totalBooks || 0}</p>
-              <p className="text-sm text-muted">Books</p>
-            </div>
-            <div>
-              <p className="text-3xl font-bold font-serif text-gold">{dashBoardData?.totalReviews || 0}</p>
-              <p className="text-sm text-muted">Reviews</p>
-            </div>
-            {(user && isAuthenticated) && <div>
-              <p className="text-3xl font-bold font-serif text-forest">{dashBoardData?.totalMembers || 0}</p>
-              <p className="text-sm text-muted">Members</p>
-            </div>}
-          </div>
-        </div>
-      </section>
+      <DashStats totalBooks={dashBoardData?.totalBooks} totalReviews={dashBoardData?.totalReviews} totalMembers={dashBoardData?.totalMembers} isLoading={isDashboardLoading} />
 
       {/* Recently Added */}
       <section className="py-16">
         <div className="max-w-6xl mx-auto px-4">
           <div className="flex items-center justify-between mb-8">
             <h2 className="font-serif text-2xl font-bold text-ink">Recently Added</h2>
-            <Link to="/books" className="text-burgundy hover:underline">
+            <Link
+              to="/books?sort=rating"
+              className="text-burgundy hover:underline disabled:pointer-events-none disabled:opacity-50"
+              onClick={(e) => isDashboardLoading && e.preventDefault()}
+            >
               View All →
             </Link>
           </div>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {dashBoardData?.recentBooks?.length > 0 ? dashBoardData?.recentBooks?.map((book) => (
-              <BookCard key={book.id} book={book} />
-            )) :
-              <EmptyBookShelf type="recently-added" />
-            }
-          </div>
+          {isDashboardLoading ?
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {[...Array(3)].map((_, i) => <SkeletonCard key={i} />)}
+            </div>
+            :
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {dashBoardData?.recentBooks?.length > 0 ? dashBoardData?.recentBooks?.map((book) => (
+                <BookCard key={book.id} book={book} />
+              )) :
+                <EmptyBookShelf type="recently-added" />
+              }
+            </div>}
         </div>
       </section>
 
@@ -111,17 +93,26 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-4">
           <div className="flex items-center justify-between mb-8">
             <h2 className="font-serif text-2xl font-bold text-ink">Top Rated</h2>
-            <Link to="/books?sort=rating" className="text-burgundy hover:underline">
+            <Link
+              to="/books?sort=rating"
+              className="text-burgundy hover:underline disabled:pointer-events-none disabled:opacity-50"
+              onClick={(e) => isDashboardLoading && e.preventDefault()}
+            >
               View All →
             </Link>
           </div>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {dashBoardData?.topRated?.length > 0 ? dashBoardData?.topRatedBooks?.map((book) => (
-              <BookCard key={book.id} book={book} />
-            )) :
-              <EmptyBookShelf type="top-rated" />
-            }
-          </div>
+          {isDashboardLoading ?
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {[...Array(3)].map((_, i) => <SkeletonCard key={i} />)}
+            </div>
+            :
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {dashBoardData?.topRated?.length > 0 ? dashBoardData?.topRatedBooks?.map((book) => (
+                <BookCard key={book.id} book={book} />
+              )) :
+                <EmptyBookShelf type="top-rated" />
+              }
+            </div>}
         </div>
       </section>
     </Layout>
