@@ -4,6 +4,7 @@ import { BookCard } from "@/components/BookCard";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import api from './../lib/axios';
 import SkeletonCard from "@/components/skeletonCard";
+import { useParams, useSearchParams } from "react-router-dom";
 
 interface SearchType {
   pageSize: number;
@@ -13,15 +14,19 @@ interface SearchType {
 
 export default function Books() {
   const bottomRef = useRef<HTMLDivElement>(null);
-  const [searchInput, setSearchInput] = useState<string>('')
+  const [searchParams] = useSearchParams();
+  const [searchInput, setSearchInput] = useState<string>(
+    searchParams.get('search') || ''
+  );
 
   const [filterData, setFilterData] = useState<SearchType>({
-    pageSize: 20,
+    pageSize: 10,
     query: 'recent',
-    searchText: ''
+    searchText: searchInput || ''
   });
 
   const fetchBooks = async ({ pageParam = 1 }: { pageParam: number }) => {
+    console.log(searchParams);
     const res = await api.get('/books', {
       params: {
         page: pageParam,
@@ -90,7 +95,7 @@ export default function Books() {
           <input
             type="text"
             name="searchText"
-            placeholder="Search by title, author, or ISBN..."
+            placeholder="Search by title or author..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             className="flex-1 px-4 py-2 border border-parchment rounded-lg bg-cream focus:outline-none focus:ring-2 focus:ring-burgundy/30"

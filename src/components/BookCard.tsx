@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Book } from "@/lib/mockData";
 import { StarRating } from "./StarRating";
 
-export function BookCard({ book }: { book: Book }) {
+export function BookCard({ book }: { book: any }) {
   return (
     <Link to={`/books/${book.id}`} className="block bg-white border border-parchment rounded-lg overflow-hidden hover:shadow-lg transition-shadow">
       {book?.imageUrl ? (
@@ -22,7 +22,7 @@ export function BookCard({ book }: { book: Book }) {
         <h3 className="font-serif font-bold text-ink line-clamp-1">{book.title}</h3>
         <p className="text-sm text-muted mt-1">by {book.author}</p>
         <div className="flex items-center justify-between mt-3">
-          <StarRating rating={Math.round(book.averageRating)} size="sm" />
+          <StarRating rating={Math.round(book.avgRating)} size="sm" />
           <span className="text-xs text-muted">{book.reviewCount} reviews</span>
         </div>
       </div>
