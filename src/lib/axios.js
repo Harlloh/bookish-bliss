@@ -57,7 +57,6 @@ api.interceptors.response.use(
 
         // Unrecoverable errors - must login again
         const unrecoverableErrors = ['NO_TOKEN', 'SESSION_EXPIRED', 'REFRESH_TOKEN_EXPIRED', 'NO_REFRESH_TOKEN', 'INVALID_REFRESH_TOKEN'];
-        console.log("****** Unrecoverable Errors ******", unrecoverableErrors, errorCode);
         if (status === 401 && unrecoverableErrors.includes(errorCode)) {
             console.log('Unrecoverable auth error:', errorCode);
             handleLogout();

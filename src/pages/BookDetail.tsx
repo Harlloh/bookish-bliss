@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { StarRating } from "@/components/StarRating";
@@ -8,6 +8,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import api from './../lib/axios';
 import { useAuthStore } from "@/stores/authStore";
 import { BookDetailSkeleton } from "@/components/bookSkeleton";
+import Toast from "@/components/toast";
+import { AxiosError } from "axios";
 
 export default function BookDetail() {
   const { id } = useParams<{ id: string }>();
@@ -19,41 +21,70 @@ export default function BookDetail() {
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewText, setReviewText] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
 
 
+  // <<<<<<<<<<< FOR FETCHING THE BOOK DETAILS >>>>>>>>>>>>>
   const fetchBookById = async () => {
     const res = await api.get(`/books/${id}`)
     return res.data.book
   }
 
-  const { data: book, isLoading } = useQuery({
+  const { data: book, isLoading, isFetching } = useQuery({
     queryKey: ['books', id],  // include id so each book gets its own cache
     queryFn: fetchBookById,
     // staleTime: 1000 * 60 * 5
   })
+  // <<<<<<<<<<< FOR FETCHING THE BOOK DETAILS >>>>>>>>>>>>>
 
 
 
-  const handleSubmitReview = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const reviewData = { star: reviewRating, comment: reviewText };
+  // <<<<<<<<<<< FOR ADDING THE BOOK REVIEW >>>>>>>>>>>>>
+  // 1. This is ONLY the API call — no event, no preventDefault
+  const submitReview = async (reviewData: { star: number; comment: string }) => {
+    if (hasReviewed) {
+      const res = await api.put(`/reviews/edit-review/${userReview.id}`, reviewData);
+      return res.data;
+    }
     const res = await api.post(`/reviews/add-review/${id}`, reviewData);
     return res.data;
   };
 
-  const { mutate, isPending } = useMutation({
-    mutationFn: handleSubmitReview,
-    onSuccess: () => {
-      // invalidate the book query so it refetches with the new review
+  const { mutate, isPending, isError } = useMutation({
+    mutationFn: submitReview,
+    onSuccess: (data) => {
+      console.log('✅ success', data);
       queryClient.invalidateQueries({ queryKey: ['books', id] });
       setShowReviewForm(false);
       setReviewRating(0);
       setReviewText("");
     },
-    onError: (error) => {
-      console.error('Failed to submit review:', error);
+    onError: (error: AxiosError<{ error: string }>) => {
+      setErrorMsg(error?.response?.data?.error || 'Something went wrong. Please try again.');
+      console.error('❌ Failed to submit review:', error);
+      // setShowReviewForm(false);
+      // setReviewRating(0);
+      // setReviewText("");
     }
-  })
+  });
+
+  // 2. This ONLY handles the form event and calls mutate
+  const handleSubmitReview = (e: React.FormEvent) => {
+    e.preventDefault();
+    mutate({ star: reviewRating, comment: reviewText }); // ← triggers useMutation
+  };
+  // <<<<<<<<<<< FOR ADDING THE BOOK REVIEW >>>>>>>>>>>>>
+
+  const hasReviewed = book?.reviews?.some((item: any) => item.createdBy.id === user?.id);
+  const userReview = book?.reviews?.find((item: any) => item.createdBy.id === user?.id);
+
+
+  useEffect(() => {
+    if (userReview) {
+      setReviewRating(userReview.star);
+      setReviewText(userReview.comment);
+    }
+  }, [userReview]);
 
   if (isLoading) {
     return <Layout>
@@ -74,8 +105,20 @@ export default function BookDetail() {
     );
   }
 
+
+
+
+
+
   return (
     <Layout>
+      {isError && <Toast message={errorMsg} type="error" />}
+      {isFetching && (
+        <div className="fixed top-0 left-0 right-0 h-1 bg-burgundy/20 z-50">
+          <div className="h-full bg-burgundy animate-pulse w-full" />
+        </div>
+      )}
+
       <div className="max-w-6xl mx-auto px-4 py-8">
         <Link to="/books" className="text-burgundy hover:underline mb-6 inline-block">
           ← Back to Books
@@ -119,11 +162,8 @@ export default function BookDetail() {
             <p className="mt-6 text-ink leading-relaxed">{book?.overview}</p>
 
             {user && (
-              <button
-                onClick={() => setShowReviewForm(!showReviewForm)}
-                className="mt-6 px-6 py-3 bg-burgundy text-white rounded-lg hover:bg-burgundy/90 transition-colors"
-              >
-                Write a Review
+              <button className={`mt-6 px-6 py-3 text-white rounded-lg transition-colors ${hasReviewed ? 'bg-forest hover:bg-forest/90' : 'bg-burgundy hover:bg-burgundy/90'}`} onClick={() => setShowReviewForm(!showReviewForm)}>
+                {hasReviewed ? 'Edit Your Review' : 'Write a Review'}
               </button>
             )}
           </div>
@@ -163,7 +203,7 @@ export default function BookDetail() {
                 disabled={reviewRating === 0 || isPending}
                 className="px-6 py-2 bg-burgundy text-white rounded-lg hover:bg-burgundy/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isPending ? 'Submitting...' : 'Submit Review'}
+                {isPending ? 'Submitting...' : hasReviewed ? 'Submit Edit' : 'Submit Review'}
               </button>
               <button
                 type="button"
@@ -185,7 +225,7 @@ export default function BookDetail() {
           {book?.reviews?.length > 0 ? (
             <div className="space-y-4">
               {book?.reviews?.map((review: any) => (
-                <ReviewCard key={review.id} review={review} />
+                <span key={review.id}><ReviewCard review={review} /></span>
               ))}
             </div>
           ) : (
