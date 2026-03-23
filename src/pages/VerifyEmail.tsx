@@ -15,7 +15,7 @@ export default function VerifyEmail() {
   const handleVerifyemail = async () => {
     try {
       setStatus("loading")
-      const res = await api.post('http://localhost:8000/auth/verify', {
+      const res = await api.post('/auth/verify', {
         token: verifyToken,
         userId
       })
