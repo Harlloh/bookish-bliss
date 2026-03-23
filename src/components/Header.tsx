@@ -79,7 +79,7 @@ export function Header() {
         </Link>
 
         {/* Search */}
-        <div ref={searchRef} className="relative flex-1 max-w-md hidden md:block">
+        {user && isAuthenticated && <div ref={searchRef} className="relative flex-1 max-w-md hidden md:block">
           <input
             type="text"
             placeholder="Search books..."
@@ -136,7 +136,7 @@ export function Header() {
             </div>
           )}
         </div>
-
+        }
         <nav className="flex items-center gap-4">
           {isAuthenticated && user && <Link to="/books" className="text-ink hover:text-burgundy">Books</Link>}
           {isAuthenticated && user ? (
