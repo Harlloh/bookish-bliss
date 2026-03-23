@@ -41,12 +41,12 @@ export default function Home() {
             Join our community of book lovers. Share reviews, discover hidden gems, and build your reading list.
           </p>
           <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
+            {user && <Link
               to="/books"
               className="px-6 py-3 bg-burgundy text-white rounded-lg hover:bg-burgundy/90 transition-colors font-semibold"
             >
               Browse Books →
-            </Link>
+            </Link>}
             <Link
               to="/register"
               className="px-6 py-3 border-2 border-earth text-earth rounded-lg hover:bg-earth hover:text-white transition-colors font-semibold"
