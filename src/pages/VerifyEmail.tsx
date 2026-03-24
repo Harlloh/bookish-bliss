@@ -1,6 +1,7 @@
 import { Link, useParams, useSearchParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import api from "@/lib/axios";
+import { useAuthStore } from "@/stores/authStore";
 
 
 export default function VerifyEmail() {
@@ -8,7 +9,7 @@ export default function VerifyEmail() {
   const [searchParams] = useSearchParams();
 
 
-  const verifyToken = searchParams.get("token");
+  let verifyToken = searchParams.get("token");
   const userId = searchParams.get("id");
 
 
@@ -20,6 +21,19 @@ export default function VerifyEmail() {
         userId
       })
       setStatus('success')
+    } catch (error) {
+      setStatus("error");
+      console.error("An error occured while verifying email address, ", error)
+    }
+  }
+  const handleResendEmail = async () => {
+    try {
+      setStatus("loading")
+      const res = await api.post('/auth/resend-mail', {
+        userId
+      })
+      setStatus("success")
+      verifyToken = null
     } catch (error) {
       setStatus("error");
       console.error("An error occured while verifying email address, ", error)
@@ -111,7 +125,7 @@ export default function VerifyEmail() {
                 The verification link is invalid or has expired.
               </p>
               <div className="space-y-2">
-                <button className="w-full px-6 py-3 bg-burgundy text-white rounded-lg hover:bg-burgundy/90 transition-colors">
+                <button onClick={handleResendEmail} className="w-full px-6 py-3 bg-burgundy text-white rounded-lg hover:bg-burgundy/90 transition-colors">
                   Resend Verification Email
                 </button>
                 <Link
