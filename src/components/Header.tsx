@@ -67,6 +67,10 @@ export function Header() {
     setDropdownOpen(false);
     setSearchInput("");
   };
+  let userDetails
+  if (user) {
+    userDetails = user
+  }
 
   return (
     <header className="sticky top-0 z-50 bg-white border-b border-parchment shadow-sm">
@@ -142,7 +146,7 @@ export function Header() {
           {isAuthenticated && user ? (
             <div className="relative" ref={menuRef}>
               <button onClick={() => setMenuOpen(!menuOpen)} className="w-8 h-8 bg-forest text-white rounded-full flex items-center justify-center font-semibold">
-                {user?.name?.charAt(0)?.toUpperCase()}
+                {(userDetails?.name || userDetails?.user)?.charAt(0)?.toUpperCase()}
               </button>
               {menuOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white border border-parchment rounded-lg shadow-lg py-2">
