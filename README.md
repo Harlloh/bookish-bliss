@@ -64,18 +64,11 @@ npm run build
  
 This project uses [Sentry](https://sentry.io) for error tracking in production. Sentry is initialized in `main.tsx` and automatically captures unhandled exceptions and component errors.
  
-```ts
-Sentry.init({
-  dsn: import.meta.env.SENTRY_DSN,
-});
-```
- 
 ---
 ## Environment Variables
  
 Create a `.env.sentry-build-plugin` file in the root:
 ```env
-SENTRY_DSN=https://your-sentry-dsn
 SENTRY_AUTH_TOKEN=https://your-sentry-auth-token
 ```
 ---
