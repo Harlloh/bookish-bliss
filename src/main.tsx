@@ -30,13 +30,6 @@ Sentry.init({
 createRoot(document.getElementById("root")!).render(
     <>
         <QueryClientProvider client={queryClient}>
-            <button
-                onClick={() => {
-                    throw new Error('This is your first error!');
-                }}
-            >
-                Break the world
-            </button>
             <App />
             <ReactQueryDevtools initialIsOpen={false} />
         </QueryClientProvider>
