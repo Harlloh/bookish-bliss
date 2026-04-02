@@ -16,6 +16,7 @@ A modern book review platform where users can discover books, write reviews, and
 - **Zustand** — client state management (auth)
 - **Axios** — HTTP client
 - **React Router v6** — client-side routing
+- **Sentry** — error monitoring and tracking
 - **Vitest + Testing Library** — unit testing
 
 ---
@@ -59,13 +60,24 @@ npm run dev
 ```bash
 npm run build
 ```
-
-### Running Tests
-
-```bash
-npm run test
+## Error Monitoring
+ 
+This project uses [Sentry](https://sentry.io) for error tracking in production. Sentry is initialized in `main.tsx` and automatically captures unhandled exceptions and component errors.
+ 
+```ts
+Sentry.init({
+  dsn: import.meta.env.SENTRY_DSN,
+});
 ```
-
+ 
+---
+## Environment Variables
+ 
+Create a `.env.sentry-build-plugin` file in the root:
+```env
+SENTRY_DSN=https://your-sentry-dsn
+SENTRY_AUTH_TOKEN=https://your-sentry-auth-token
+```
 ---
 
 ## Project Structure
@@ -102,12 +114,6 @@ src/
 ## Deployment
 
 Deployed on **Vercel**. Every push to `main` triggers an automatic deployment.
-
-Set the following environment variable in your Vercel project settings:
-
-```
-VITE_API_URL=https://your-backend-url.com
-```
 
 ---
 
