@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://attendance-backend-qnf8.onrender.com/:path*"
+      "destination": "https://bookish-server-s0os.onrender.com/:path*"
     },
     {
       "source": "/(.*)",
